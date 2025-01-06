@@ -1,0 +1,206 @@
+Cleaning data SQL code
+
+exercise_and_fitness_metric table:
+Cleaning:
+ SELECT DISTINCT
+   ID,
+   LOWER(TRIM(COALESCE(Exercise, 'n/a'))) AS Exercise,
+   Age,
+   LOWER(TRIM(COALESCE(Gender, 'n/a'))) AS Gender,
+   BMI
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.exercise_matrics_cleaned`
+
+daily_acivity table:
+Cleaning: 
+ SELECT DISTINCT 
+   COALESCE(Id, 0) AS Id,  
+   COALESCE(ActivityDate, '1900-01-01') AS ActivityDate,
+   COALESCE(TotalSteps, 0) AS TotalSteps,
+   COALESCE(ROUND(TotalDistance, 2), 0.0) AS TotalDistance,
+   COALESCE(ROUND(TrackerDistance, 2), 0.0) AS TrackerDistance,
+   COALESCE(Calories, 0) AS Calories  
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_activity`
+
+daily_calories table:
+Field name change:
+ ALTER TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_calories`
+ RENAME COLUMN `Sum of Calories` TO Calories
+
+Cleaning:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_calories_c`    AS
+ SELECT 
+   COALESCE(Id, 0) AS Id,  
+   COALESCE(Date, '1900-01-01') AS Date,
+   COALESCE(Calories, 0) AS Calories
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_calories`
+
+daily_intesntiy table:
+Field name change:
+ ALTER TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_intensity`
+ RENAME COLUMN `Sum of TotalIntensity` TO TotalIntensity;
+
+ ALTER TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_intensity`
+ RENAME COLUMN `Sum of AverageIntensity` TO AverageIntensity
+
+Cleaning:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_intensity_c` AS
+ SELECT 
+    COALESCE(Id, 0) AS Id,  
+    COALESCE(Date, '1900-01-01') AS Date,
+    COALESCE(TotalIntensity, 0) AS TotalIntensity,  
+    COALESCE(ROUND(AverageIntensity, 2), 0.0) AS AverageIntensity  
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_intensity`;
+
+weightloss table:
+Field name change:
+ ALTER TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss`
+ RENAME COLUMN `Sum of WeightKg` TO WeightKg;
+
+ ALTER TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss`
+ RENAME COLUMN `Sum of WeightPounds` TO WeightPounds;
+
+ ALTER TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss`
+ RENAME COLUMN `Sum of BMI` TO BMI;
+
+Cleaning:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss_c` AS
+ SELECT
+   LOWER(TRIM(COALESCE(ID, 'n/a'))) AS ID,
+   COALESCE(ROUND(WeightKg, 2), 0.0) AS WeightKg,
+   COALESCE(ROUND(WeightPounds, 2), 0.0) AS WeightPounds,
+   COALESCE(ROUND(BMI, 2), 0.0) AS BMI
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss`
+
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss_C` AS
+ SELECT *
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss_c`
+ WHERE id != 'grand total';  
+
+Analysing SQL code
+
+daily_acivity table:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.activity_summary` AS
+ SELECT 
+    ActivityDate,
+    Id,
+    AVG(TotalSteps) AS avg_total_steps, 
+    MIN(TotalSteps) AS min_total_steps, 
+    MAX(TotalSteps) AS max_total_steps, 
+    AVG(TotalDistance) AS avg_total_distance,  
+    MIN(TotalDistance) AS min_total_distance,  
+    MAX(TotalDistance) AS max_total_distance, 
+    AVG(Calories) AS avg_calories, 
+    MIN(Calories) AS min_calories,  
+    MAX(Calories) AS max_calories
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_activity_c`
+ GROUP BY ActivityDate, Id
+ ORDER BY ActivityDate, Id;
+
+daily_calorie table:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.calories_summary` AS
+ SELECT 
+   Date,
+   Id,
+   AVG(Calories) AS avg_calories, 
+   MIN(Calories) AS min_calories,  
+   MAX(Calories) AS max_calories
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_calories_c`
+ GROUP BY Date, Id
+ ORDER BY Date, Id;
+
+daily_intensity table:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.intensity_summary` AS
+ SELECT 
+   Date,
+   Id,
+   AVG(TotalIntensity) AS avg_intensity, 
+   MIN(TotalIntensity) AS min_intensity,  
+   MAX(TotalIntensity) AS max_intensity
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_intensity_c`
+ GROUP BY Date, Id
+ ORDER BY Date, Id;
+
+exercise_and_fitness_metric table:
+ CREATE OR REPLACE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.demograph_summary` AS
+ SELECT 
+   Age,
+   Gender,
+   COUNT(*) AS count_per_gender, 
+   AVG(BMI) AS avg_bmi  
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.exercise_and_fitness_metric`
+ GROUP BY Age, Gender
+ ORDER BY Age, Gender;
+
+weightloss table:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss_summary` AS
+ SELECT 
+    Id,
+    AVG(WeightKg) AS avg_WeightKg, 
+    MIN(WeightKg) AS min_WeightKg, 
+    MAX(WeightKg) AS max_WeightKg, 
+    AVG(WeightPounds) AS avg_WeightPounds,  
+    MIN(WeightPounds) AS min_WeightPounds,  
+    MAX(WeightPounds) AS max_WeightPounds, 
+    AVG(BMI) AS avg_BMI, 
+    MIN(BMI) AS min_BMI,  
+    MAX(BMI) AS max_BMI
+ FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss_c` 
+ GROUP BY Id
+ ORDER BY Id;
+
+Created a table of all the aggrigated FitBit data:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.agg_summary` AS
+ SELECT
+     a.Id,
+     a.Date,
+     a.avg_total_steps,
+     a.min_total_steps,
+     a.max_total_steps,
+     a.avg_total_distance,
+     a.min_total_distance,
+     a.max_total_distance,
+     b.avg_calories,
+     b.min_calories,
+     b.max_calories,
+     c.avg_intensity,
+     c.min_intensity,
+     c.max_intensity,
+     d.avg_WeightKg,
+     d.min_WeightKg,
+     d.max_WeightKg,
+     d.avg_WeightPounds,
+     d.min_WeightPounds,
+     d.max_WeightPounds,
+     d.avg_BMI,
+     d.min_BMI,
+     d.max_BMI
+ FROM
+     `FitBit_Fitness_Tracker.activity_summary` AS a
+ FULL OUTER JOIN `FitBit_Fitness_Tracker.calories_summary` AS b
+     ON CAST(a.Id AS INT64) = CAST(b.Id AS INT64) AND a.Date = b.Date
+ FULL OUTER JOIN `FitBit_Fitness_Tracker.intensity_summary` AS c
+     ON CAST(a.Id AS INT64) = CAST(c.Id AS INT64) AND a.Date = c.Date
+ FULL OUTER JOIN `FitBit_Fitness_Tracker.weightloss_summary1` AS d
+     ON CAST(a.Id AS INT64) = CAST(d.Id AS INT64)
+
+Creating root_summary table:
+ CREATE TABLE `fitness-tracker-project-1.FitBit_Fitness_Tracker.root_summary` AS
+ SELECT 
+    t1.*,
+    t2.TotalSteps AS TotalSteps,
+    t2.TotalDistance AS TotalDistance,
+    t2.TrackerDistance AS TrackerDistance,
+    t3.calories AS Calories,
+    t4.TotalIntensity AS TotalIntensity,
+    t5.WeightKg AS WeightKg,
+    t5.WeightPounds AS WeightPounds,
+    t5.BMI AS BMI
+FROM `fitness-tracker-project-1.FitBit_Fitness_Tracker.agg_summary` AS t1
+LEFT JOIN `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_activity_c` AS t2
+ON CAST(t1.Id AS INT64) = CAST(t2.Id AS INT64)
+LEFT JOIN `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_calories_c` AS t3
+ON CAST(t1.Id AS INT64) = CAST(t3.Id AS INT64)
+LEFT JOIN `fitness-tracker-project-1.FitBit_Fitness_Tracker.daily_intensity_c` AS t4
+ON CAST(t1.Id AS INT64) = CAST(t4.Id AS INT64)
+LEFT JOIN `fitness-tracker-project-1.FitBit_Fitness_Tracker.weightloss_C` AS t5
+ON CAST(t1.Id AS INT64) = CAST(t5.Id AS INT64);
